@@ -86,7 +86,7 @@ function updateCard(cam) {
   else if(state.visible.has(cam.id))ensurePlayer(cam.id);
 }
 function renderGrid() {
-  $('manage-button').hidden=!!state.token&&state.role!=='admin';
+  if($('manage-button'))$('manage-button').hidden=!!state.token&&state.role!=='admin';
   const cameras=state.cameras.filter(c=>{
     const filter=state.filter==='all'||(state.filter==='active'?c.status==='online':c.group.toLowerCase()===state.filter.toLowerCase());
     return filter&&(c.name+' '+c.group+' '+c.officer+' '+c.id).toLowerCase().includes(state.query.toLowerCase());
@@ -232,8 +232,8 @@ document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('cli
 }));
 $('filters').addEventListener('click',e=>{const b=e.target.closest('[data-filter]');if(b){state.filter=b.dataset.filter;renderGrid();}});
 $('search').addEventListener('input',e=>{state.query=e.target.value;renderGrid();});
-$('server-button').addEventListener('click',openLogin);
-$('manage-button').addEventListener('click',()=>openSetup(state.selected));
+$('server-button')?.addEventListener('click',openLogin);
+$('manage-button')?.addEventListener('click',()=>openSetup(state.selected));
 async function openSetup(id) {
   if(!requireLogin(()=>openSetup(id)))return;
   if(state.role!=='admin'){toast('Sign in as admin to manage cameras.');return;}
@@ -268,7 +268,7 @@ $('copy-url').addEventListener('click',async()=>{try{await navigator.clipboard.w
 $('rotate-key').addEventListener('click',async()=>{try{await api('/api/cameras/'+state.selected+'/rotate-key',{method:'POST'});await openSetup(state.selected);toast('New key generated. Update this camera’s publishing settings.');}catch(error){toast(error.message);}});
 $('probe-button').addEventListener('click',async()=>{const b=$('probe-button');b.disabled=true;$('probe-result').textContent='Testing connection…';try{const data=await api('/api/cameras/'+state.selected+'/probe',{method:'POST'});$('probe-result').textContent=data.reachable?'Video received: '+data.video.codec_name+' · '+data.video.width+'×'+data.video.height:data.message;}catch(error){$('probe-result').textContent=error.message;}finally{b.disabled=false;}});
 $('setup-dialog').addEventListener('close',()=>{['rtmp-url','rtmp-server','rtmp-key','srt-url','rtsp-publish-url','publish-password','cam-rtsp'].forEach(id=>$(id).value='');});
-$('recordings-button').addEventListener('click',()=>{
+$('recordings-button')?.addEventListener('click',()=>{
   if(!requireLogin(()=>$('recordings-button').click()))return;
   const selector=$('recording-camera');selector.replaceChildren(element('option','','All cameras'));selector.firstChild.value='';
   state.cameras.forEach(cam=>{const o=element('option','',cam.name);o.value=cam.id;selector.append(o);});
