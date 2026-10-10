@@ -1,0 +1,36 @@
+name: eg-bodycam
+services:
+  app:
+    build: .
+    user: "${BODYCAM_UID:-1000}:${BODYCAM_GID:-1000}"
+    env_file: .env
+    ports:
+      - "${APP_BIND:-127.0.0.1}:${APP_PORT:-18081}:8000"
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+  mediamtx:
+    image: bluenviron/mediamtx:1.21.2
+    user: "${BODYCAM_UID:-1000}:${BODYCAM_GID:-1000}"
+    environment:
+      TZ: UTC
+      MTX_WEBRTCADDITIONALHOSTS: "${PUBLISH_HOST}"
+      MTX_WEBRTCLOCALUDPADDRESS: ":${WEBRTC_PORT:-18189}"
+    ports:
+      - "${RTMP_PORT:-11935}:1935/tcp"
+      - "${RTSP_PORT:-18554}:8554/tcp"
+      - "${SRT_PORT:-18890}:8890/udp"
+      - "${WEBRTC_PORT:-18189}:${WEBRTC_PORT:-18189}/udp"
+    volumes:
+      - ./data/mediamtx.yml:/mediamtx.yml:ro
+      - ./data/recordings:/recordings
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+

@@ -1,0 +1,11 @@
+.git
+.openai
+.env
+.env.*
+data
+models
+.pytest_cache
+__pycache__
+dist/downloads
+auto.key
+auto.crt

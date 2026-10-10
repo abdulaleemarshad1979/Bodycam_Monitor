@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="description" content="East Godavari centralized body camera monitoring, live viewing and recordings.">
+  <title>East Godavari Body Camera Monitoring System</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script defer src="/assets/hls.min.js"></script>
+  <script defer src="/app.js"></script>
+</head>
+<body>
+<header class="header">
+  <div class="brand"><span class="portrait logo" role="img" aria-label="Andhra Pradesh Police emblem"></span><div>
+    <h1>ANDHRA PRADESH POLICE DEPARTMENT</h1>
+    <p>East Godavari Body Camera Monitoring System</p>
+  </div></div>
+  <div class="dignitaries" aria-label="Leadership shown in the supplied interface reference">
+    <div class="dignitary"><span class="portrait cm" role="img" aria-label="Sri N. Chandrababu Naidu"></span><strong>Sri N. Chandrababu Naidu</strong><small>HON'BLE CHIEF MINISTER</small></div>
+    <div class="dignitary"><span class="portrait dgp" role="img" aria-label="Sri Harish Kumar Gupta, IPS"></span><strong>Sri Harish Kumar Gupta, IPS</strong><small>DGP, ANDHRA PRADESH</small></div>
+    <div class="dignitary"><span class="portrait sp" role="img" aria-label="Sri D. Narasimha Kishore, IPS"></span><strong>Sri D. Narasimha Kishore, IPS</strong><small>SP, EAST GODAVARI</small></div>
+  </div>
+</header>
+<nav class="toolbar" aria-label="Stream controls">
+  <div class="filters" id="filters">
+    <button class="pill active" data-filter="all">All Streams</button>
+    <button class="pill" data-filter="active">Active Feeds</button>
+    <button class="pill" data-filter="Pushkaralu">Pushkaralu</button>
+    <button class="pill" data-filter="Rjy">Rjy</button>
+  </div>
+  <div class="actions">
+    <button class="pill logout" id="auth-button">Connect server</button>
+  </div>
+</nav>
+<main>
+  <section class="statusbar" aria-label="Fleet status">
+    <div class="status-left"><span class="dot unknown" id="server-dot"></span><span id="server-status">Server not connected</span><span class="separator"></span><strong id="fleet-count">33 cameras</strong><span id="hours-label"></span></div>
+    <div class="status-actions"><label class="search"><span class="sr-only">Search cameras</span><input id="search" type="search" placeholder="Search camera, officer or station…" autocomplete="off"></label><button class="text-button" id="recordings-button">Recordings</button><button class="text-button" id="manage-button">Camera setup</button><button class="text-button" id="server-button" aria-label="Server settings">Server settings</button></div>
+  </section>
+  <div id="notice" class="notice" role="status" hidden></div>
+  <section id="camera-grid" class="grid" aria-label="Body camera feeds"></section>
+  <div class="empty-grid" id="empty-grid" hidden>No cameras match this filter.</div>
+  <footer><span id="last-update">Connect the central server to receive live camera status.</span><span>Each camera uses its own SIM uplink.</span></footer>
+</main>
+<dialog id="login-dialog" class="modal login-modal">
+  <form id="login-form"><div class="modal-heading"><div><h2>Connect central server</h2><p>Sign in to your body-camera monitoring server.</p></div><button type="button" class="close" data-close aria-label="Close">×</button></div>
+    <label>Server address<input id="server-url" type="url" placeholder="https://bodycam.your-domain.in" required></label>
+    <p class="help">Use an HTTPS address when connecting from this hosted dashboard. The server package also hosts this interface locally.</p>
+    <div class="form-row"><label>Username<input id="username" autocomplete="username" value="admin" required></label><label>Password<input id="password" type="password" autocomplete="current-password" required></label></div>
+    <p id="login-error" class="error" role="alert"></p>
+    <button type="submit" class="primary" id="login-submit">Connect and sign in</button>
+    <div class="deployment-link"><a href="/downloads/Bodycam_Monitor_Deployment.zip" download>Download frontend + backend server package</a><p>Includes the 33-camera inventory, SIM publishing setup, MediaMTX, and recording.</p></div>
+  </form>
+</dialog>
+<dialog id="setup-dialog" class="modal setup-modal">
+  <div class="modal-heading"><div><h2>Camera setup</h2><p>Assign a camera and choose its SIM connection method.</p></div><button type="button" class="close" data-close aria-label="Close">×</button></div>
+  <div class="setup-layout">
+    <aside id="camera-list" aria-label="Choose a camera"></aside>
+    <div class="setup-content">
+      <form id="camera-form">
+        <h3 id="setup-title">BODY CAM 01</h3>
+        <div class="form-row"><label>Camera name<input id="cam-name" maxlength="80" required></label><label>Station / group<input id="cam-group" maxlength="80" placeholder="Rjy, Pushkaralu or station name"></label></div>
+        <div class="form-row"><label>Assigned officer<input id="cam-officer" maxlength="80"></label><label>Camera brand and model<input id="cam-model" maxlength="100" placeholder="Enter the actual camera model"></label></div>
+        <label>Connection method<select id="cam-mode"><option value="publish">SIM: camera publishes to central server</option><option value="rtsp">RTSP: server pulls through VPN / private APN</option></select></label>
+        <div id="rtsp-fields" hidden><label>Reachable RTSP source<input id="cam-rtsp" type="password" autocomplete="off" placeholder="rtsp://user:password@vpn-camera-ip:554/path"></label><p class="help">The camera must be reachable from the server through a VPN, routed private APN, or another working route. A VPN on the server alone cannot make a SIM camera reachable.</p><button type="button" class="secondary" id="probe-button">Test saved RTSP source</button><p id="probe-result" class="help"></p></div>
+        <div class="checks"><label><input id="cam-enabled" type="checkbox"> Camera enabled</label><label><input id="cam-record" type="checkbox"> Continuous recording</label></div>
+        <p class="help">Recordings keep the camera's original video quality and split at approximately 50 minutes or when the stream reconnects.</p>
+        <div class="form-actions"><button type="submit" class="primary" id="save-camera">Save camera</button><span id="save-result" class="help" role="status"></span></div>
+      </form>
+      <section id="connection-panel" class="connection-panel"><h3>Enter these settings on this camera</h3><p class="help">The camera must support publishing to a custom server. Its SIM supplies the internet connection.</p><label>RTMP publish URL<textarea id="rtmp-url" readonly rows="2" spellcheck="false"></textarea></label><div class="form-row"><label>Server URL<input id="rtmp-server" readonly></label><label>Stream key<input id="rtmp-key" readonly></label></div><details><summary>SRT / RTSP publishing settings</summary><label>SRT caller URL<textarea id="srt-url" readonly rows="2" spellcheck="false"></textarea></label><label>RTSP publishing URL<textarea id="rtsp-publish-url" readonly rows="2" spellcheck="false"></textarea></label><div class="form-row"><label>Username<input id="publish-user" readonly></label><label>Password<input id="publish-password" readonly type="password"></label></div></details><div class="form-actions"><button class="secondary" id="copy-url">Copy RTMP URL</button><button class="text-button danger-text" id="rotate-key">Generate new camera key</button></div><p class="help">Use H.264 on the device for broad browser support. RTSP server support and RTSP publishing support are different features. Keep these camera credentials private.</p></section>
+    </div>
+  </div>
+</dialog>
+<dialog id="recordings-dialog" class="modal recordings-modal">
+  <div class="modal-heading"><div><h2>Video recordings</h2><p>Actual video files saved by the central server.</p></div><button type="button" class="close" data-close aria-label="Close">×</button></div>
+  <div class="recording-filters"><label><span class="sr-only">Filter recording camera</span><select id="recording-camera"><option value="">All cameras</option></select></label><label><span class="sr-only">Search recordings</span><input id="recording-search" type="search" placeholder="Search recordings…"></label><button class="secondary" id="refresh-recordings">Refresh</button></div>
+  <p class="help" id="recording-summary"></p><div id="recording-list"></div>
+  <div class="pagination"><button class="secondary" id="recordings-prev">Previous</button><span id="recording-page"></span><button class="secondary" id="recordings-next">Next</button></div>
+</dialog>
+<dialog id="playback-dialog" class="modal playback-modal"><div class="modal-heading"><h2 id="playback-title">Recording</h2><button type="button" class="close" data-close aria-label="Close">×</button></div><video id="recording-video" controls playsinline preload="metadata"></video><p class="help" id="playback-help">Playback uses the original camera codec.</p></dialog>
+<div class="toast" id="toast" role="status" hidden></div>
+</body>
+</html>

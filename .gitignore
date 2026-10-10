@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+data/
+models/*.pt
+models/*.pth
+__pycache__/
+.pytest_cache/
+*.pyc
+.venv/
+auto.key
+auto.crt

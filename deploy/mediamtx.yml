@@ -1,0 +1,37 @@
+logLevel: info
+moq: false
+readTimeout: 15s
+writeTimeout: 15s
+writeQueueSize: 1024
+authMethod: http
+authHTTPAddress: http://app:8000/internal/media-auth
+authHTTPExclude: []
+api: true
+apiAddress: :9997
+rtsp: true
+rtspAddress: :8554
+rtspTransports: [tcp]
+rtmp: true
+rtmpAddress: :1935
+srt: true
+srtAddress: :8890
+webrtc: true
+webrtcAddress: :8889
+webrtcLocalUDPAddress: :8189
+hls: true
+hlsAddress: :8888
+hlsVariant: lowLatency
+hlsSegmentCount: 7
+hlsSegmentDuration: 1s
+hlsPartDuration: 200ms
+pathDefaults:
+  record: true
+  recordPath: /recordings/%path/%Y-%m-%d_%H-%M-%S-%f
+  recordFormat: fmp4
+  recordPartDuration: 1s
+  recordSegmentDuration: 50m
+  recordDeleteAfter: 0s
+  overridePublisher: false
+paths:
+  "~^live/bodycam(0[1-9]|[12][0-9]|3[0-3])$":
+    source: publisher
