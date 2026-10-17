@@ -173,3 +173,11 @@ def test_operator_login(tmp_path):
         headers = {'Authorization': 'Bearer ' + res.json()['token']}
         assert client.get('/api/cameras', headers=headers).status_code == 200
         assert client.get('/api/cameras/bodycam01/connection', headers=headers).status_code == 403
+
+
+def test_login_page_route(server):
+    client, app = server
+    res = client.get('/login')
+    assert res.status_code == 200
+    assert 'Officer / Operator Sign In' in res.text
+

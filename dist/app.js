@@ -22,14 +22,9 @@ function action(text,fn,className='secondary') { const b=element('button',classN
 function bytes(n) { if(!Number.isFinite(n))return '—';if(n>=1e9)return (n/1e9).toFixed(1)+' GB';if(n>=1e6)return (n/1e6).toFixed(1)+' MB';return (n/1e3).toFixed(0)+' KB'; }
 function timestamp(n) { return n ? new Date(n*1000).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',dateStyle:'medium',timeStyle:'short'})+' IST' : 'Time unavailable'; }
 function openDialog(id) { if(!$(id).open)$(id).showModal(); }
-function requireLogin(callback) { if(!state.token || !state.base) {state.pending=callback;openLogin();return false;}return true; }
+function requireLogin(callback) { if(!state.token || !state.base) {window.location.href='/login';return false;}return true; }
 function openLogin() {
-  if(!state.base && location.origin && location.origin !== 'null') state.base = location.origin;
-  $('server-url').value = state.base || (location.origin !== 'null' ? location.origin : '');
-  $('password').value = '';
-  $('login-error').textContent = '';
-  openDialog('login-dialog');
-  setTimeout(()=>{ if(!$('username').value) $('username').focus(); else $('password').focus(); },50);
+  window.location.href = '/login';
 }
 function url(path) { return state.base.replace(/\/+$/,'')+path; }
 async function api(path,options={}) {
@@ -194,9 +189,7 @@ function resetSession() {
   for(const id of state.players.keys())stopPlayer(id);
   state.token='';state.role='';state.connected=false;state.mediaOnline=false;state.cameras=plannedCameras();
   sessionStorage.removeItem('bodycam_token');sessionStorage.removeItem('bodycam_role');
-  $('auth-button').textContent='Login';$('auth-button').classList.remove('logout');$('server-status').textContent='Server not connected';
-  $('server-dot').className='dot unknown';$('fleet-count').textContent='33 cameras';$('hours-label').textContent='';
-  $('last-update').textContent='Connect the central server to receive live camera status.';renderGrid();
+  window.location.replace('/login');
 }
 async function refresh() {
   if(!state.token||!state.base||state.refreshing)return;state.refreshing=true;
@@ -210,11 +203,11 @@ async function refresh() {
     if(data.media_online)notice('');else notice('The backend is connected, but MediaMTX is unavailable. Check the streaming-server service.');
     renderGrid();
   }catch(error){
-    if(error.status===401){resetSession();notice('Your session expired. Please sign in again.');}
+    if(error.status===401){resetSession();}
     else {state.connected=false;state.cameras=state.cameras.map(c=>({...c,status:'unknown'}));$('server-status').textContent='Central server unreachable';$('server-dot').className='dot unknown';$('fleet-count').textContent='— / 33 live';notice('Cannot reach the central server. '+error.message);renderGrid();}
   }finally{state.refreshing=false;}
 }
-$('login-form').addEventListener('submit',async e=>{
+$('login-form')?.addEventListener('submit',async e=>{
   e.preventDefault();$('login-error').textContent='';$('login-submit').disabled=true;
   try {
     const rawVal=($('server-url').value||state.base||(location.origin!=='null'?location.origin:'')).trim();
@@ -228,14 +221,13 @@ $('login-form').addEventListener('submit',async e=>{
     let data;try{data=await api('/api/auth/login',{method:'POST',body:{username:$('username').value,password:$('password').value}});}catch(error){state.base=previous;throw error;}
     for(const id of state.players.keys())stopPlayer(id);
     state.token=data.token;state.role=data.role;localStorage.setItem('bodycam_api',state.base);sessionStorage.setItem('bodycam_token',state.token);sessionStorage.setItem('bodycam_role',state.role);
-    $('password').value='';$('login-dialog').close();await refresh();
+    $('password').value='';$('login-dialog')?.close();await refresh();
     const pending=state.pending;state.pending=null;if(pending)pending();
-  }catch(error){$('login-error').textContent=error.message;}finally{$('login-submit').disabled=false;}
+  }catch(error){if($('login-error'))$('login-error').textContent=error.message;}finally{if($('login-submit'))$('login-submit').disabled=false;}
 });
 $('auth-button').addEventListener('click',async()=>{
-  if(!state.token){openLogin();return;}
   try{await api('/api/auth/logout',{method:'POST'});}catch{}
-  document.querySelectorAll('dialog[open]').forEach(d=>d.close());resetSession();notice('');
+  document.querySelectorAll('dialog[open]').forEach(d=>d.close());resetSession();
 });
 document.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));
 document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('click',event=>{
@@ -320,4 +312,8 @@ $('playback-dialog').addEventListener('close',()=>{const v=$('recording-video');
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){refresh();for(const id of state.visible)ensurePlayer(id);}});
 document.addEventListener('fullscreenchange',()=>{for(const [id,p] of state.players)p.video.controls=document.fullscreenElement===state.cards.get(id)?.card;});
 window.addEventListener('beforeunload',()=>{for(const id of state.players.keys())stopPlayer(id);});
-renderGrid();refresh();setInterval(refresh,10000);
+if(!state.token){
+  window.location.replace('/login');
+}else{
+  renderGrid();refresh();setInterval(refresh,10000);
+}

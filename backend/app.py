@@ -666,5 +666,12 @@ def create_app(settings=None):
         return await proxy(request,cid,"whep",resource)
 
     if cfg.frontend_dir.exists():
+        @app.get("/login", include_in_schema=False)
+        async def login_page():
+            login_file = cfg.frontend_dir / "login.html"
+            if login_file.exists():
+                return FileResponse(login_file)
+            return FileResponse(cfg.frontend_dir / "index.html")
+
         app.mount("/",StaticFiles(directory=cfg.frontend_dir,html=True),name="dashboard")
     return app

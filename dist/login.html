@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="description" content="Sign in to East Godavari centralized body camera monitoring system.">
+  <title>Login · East Godavari Body Camera Monitoring System</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script>
+    if (sessionStorage.getItem('bodycam_token')) {
+      window.location.replace('/');
+    }
+  </script>
+</head>
+<body class="login-page">
+<header class="header">
+  <div class="brand"><span class="portrait logo" role="img" aria-label="Andhra Pradesh Police emblem"></span><div>
+    <h1>ANDHRA PRADESH POLICE DEPARTMENT</h1>
+    <p>East Godavari Body Camera Monitoring System</p>
+  </div></div>
+  <div class="dignitaries" aria-label="Leadership">
+    <div class="dignitary"><span class="portrait cm" role="img" aria-label="Sri N. Chandrababu Naidu"></span><strong>Sri N. Chandrababu Naidu</strong><small>HON'BLE CHIEF MINISTER</small></div>
+    <div class="dignitary"><span class="portrait dgp" role="img" aria-label="Sri Harish Kumar Gupta, IPS"></span><strong>Sri Harish Kumar Gupta, IPS</strong><small>DGP, ANDHRA PRADESH</small></div>
+    <div class="dignitary"><span class="portrait sp" role="img" aria-label="Sri D. Narasimha Kishore, IPS"></span><strong>Sri D. Narasimha Kishore, IPS</strong><small>SP, EAST GODAVARI</small></div>
+  </div>
+</header>
+
+<main class="login-main">
+  <div class="login-card">
+    <div class="login-card-header">
+      <span class="portrait logo" role="img" aria-label="Andhra Pradesh Police emblem"></span>
+      <h2>Officer / Operator Sign In</h2>
+      <p>Authorized access to live body camera monitoring</p>
+    </div>
+    <form id="login-form">
+      <label for="username">Username
+        <input id="username" name="username" autocomplete="username" placeholder="Enter username" required autofocus>
+      </label>
+      <label for="password">Password
+        <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter password" required>
+      </label>
+      <details style="margin-bottom:14px">
+        <summary class="advanced-toggle">Advanced server settings</summary>
+        <label for="server-url" style="margin-top:10px">Server address
+          <input id="server-url" name="server-url" type="url" placeholder="https://bodycam.your-domain.in">
+          <small class="help" style="margin:4px 0 0">Leave empty to use current host.</small>
+        </label>
+      </details>
+      <p id="login-error" class="error" role="alert" style="margin-bottom:12px"></p>
+      <button type="submit" class="primary" id="login-submit">Sign In</button>
+    </form>
+  </div>
+</main>
+
+<footer class="login-footer">
+  <span>Andhra Pradesh Police Department · East Godavari District Police</span>
+</footer>
+
+<script src="/login.js"></script>
+</body>
+</html>
