@@ -27,7 +27,7 @@
     <button class="pill" data-filter="active">Active Feeds</button>
   </div>
   <div class="actions">
-    <button class="pill logout" id="auth-button">Connect server</button>
+    <button class="pill" id="auth-button">Login</button>
   </div>
 </nav>
 <main>
@@ -41,13 +41,12 @@
   <footer><span id="last-update">Connect the central server to receive live camera status.</span><span>Each camera uses its own SIM uplink.</span></footer>
 </main>
 <dialog id="login-dialog" class="modal login-modal">
-  <form id="login-form"><div class="modal-heading"><div><h2>Connect central server</h2><p>Sign in to your body-camera monitoring server.</p></div><button type="button" class="close" data-close aria-label="Close">×</button></div>
-    <label>Server address<input id="server-url" type="url" placeholder="https://bodycam.your-domain.in" required></label>
-    <p class="help">Use an HTTPS address when connecting from this hosted dashboard. The server package also hosts this interface locally.</p>
-    <div class="form-row"><label>Username<input id="username" autocomplete="username" value="admin" required></label><label>Password<input id="password" type="password" autocomplete="current-password" required></label></div>
+  <form id="login-form"><div class="modal-heading"><div><h2>Sign In</h2><p>Monitoring System Login</p></div><button type="button" class="close" data-close aria-label="Close">×</button></div>
+    <div class="form-row"><label>Username<input id="username" autocomplete="username" placeholder="Enter username" required></label><label>Password<input id="password" type="password" autocomplete="current-password" placeholder="Enter password" required></label></div>
+    <label>Server address<input id="server-url" type="url" placeholder="https://bodycam.your-domain.in"></label>
+    <p class="help">Defaults to current server. Edit only if connecting from a remote dashboard.</p>
     <p id="login-error" class="error" role="alert"></p>
-    <button type="submit" class="primary" id="login-submit">Connect and sign in</button>
-    <div class="deployment-link"><a href="/downloads/Bodycam_Monitor_Deployment.zip" download>Download frontend + backend server package</a><p>Includes the 33-camera inventory, SIM publishing setup, MediaMTX, and recording.</p></div>
+    <button type="submit" class="primary" id="login-submit">Sign In</button>
   </form>
 </dialog>
 <dialog id="setup-dialog" class="modal setup-modal">

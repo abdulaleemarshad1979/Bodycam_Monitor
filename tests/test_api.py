@@ -157,3 +157,19 @@ def test_sim_stall_or_control_outage_does_not_allow_partial_download(server):
     assert client.get(url+'&download=true').status_code==409
     media.checked_at=time.time()
     assert client.get(url+'&download=true').status_code==200
+
+
+def test_operator_login(tmp_path):
+    from backend.app import Settings, create_app
+    settings = Settings(data_dir=tmp_path, admin_password="Correct-Admin-123!",
+                        operator_password="Correct-Operator-123!",
+                        viewer_password="Correct-Viewer-123!", internal_key="test-service-secret",
+                        publish_host="cams.example.test", poll_seconds=600)
+    app = create_app(settings)
+    with TestClient(app) as client:
+        res = client.post('/api/auth/login', json={'username':'operator','password':'Correct-Operator-123!'})
+        assert res.status_code == 200
+        assert res.json()['role'] == 'operator'
+        headers = {'Authorization': 'Bearer ' + res.json()['token']}
+        assert client.get('/api/cameras', headers=headers).status_code == 200
+        assert client.get('/api/cameras/bodycam01/connection', headers=headers).status_code == 403

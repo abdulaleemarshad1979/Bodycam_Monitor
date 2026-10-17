@@ -23,7 +23,14 @@ function bytes(n) { if(!Number.isFinite(n))return '—';if(n>=1e9)return (n/1e9)
 function timestamp(n) { return n ? new Date(n*1000).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',dateStyle:'medium',timeStyle:'short'})+' IST' : 'Time unavailable'; }
 function openDialog(id) { if(!$(id).open)$(id).showModal(); }
 function requireLogin(callback) { if(!state.token || !state.base) {state.pending=callback;openLogin();return false;}return true; }
-function openLogin() { $('server-url').value=state.base;$('password').value='';$('login-error').textContent='';openDialog('login-dialog'); }
+function openLogin() {
+  if(!state.base && location.origin && location.origin !== 'null') state.base = location.origin;
+  $('server-url').value = state.base || (location.origin !== 'null' ? location.origin : '');
+  $('password').value = '';
+  $('login-error').textContent = '';
+  openDialog('login-dialog');
+  setTimeout(()=>{ if(!$('username').value) $('username').focus(); else $('password').focus(); },50);
+}
 function url(path) { return state.base.replace(/\/+$/,'')+path; }
 async function api(path,options={}) {
   const {raw=false,...rest}=options;
@@ -187,7 +194,7 @@ function resetSession() {
   for(const id of state.players.keys())stopPlayer(id);
   state.token='';state.role='';state.connected=false;state.mediaOnline=false;state.cameras=plannedCameras();
   sessionStorage.removeItem('bodycam_token');sessionStorage.removeItem('bodycam_role');
-  $('auth-button').textContent='Connect server';$('server-status').textContent='Server not connected';
+  $('auth-button').textContent='Login';$('auth-button').classList.remove('logout');$('server-status').textContent='Server not connected';
   $('server-dot').className='dot unknown';$('fleet-count').textContent='33 cameras';$('hours-label').textContent='';
   $('last-update').textContent='Connect the central server to receive live camera status.';renderGrid();
 }
@@ -195,7 +202,7 @@ async function refresh() {
   if(!state.token||!state.base||state.refreshing)return;state.refreshing=true;
   try {
     const data=await api('/api/cameras');state.cameras=data.cameras;state.connected=true;state.mediaOnline=data.media_online;
-    $('auth-button').textContent='Logout';$('server-status').textContent=data.media_online?'Central server connected':'Streaming server unavailable';
+    $('auth-button').textContent='Logout';$('auth-button').classList.add('logout');$('server-status').textContent=data.media_online?'Central server connected':'Streaming server unavailable';
     $('server-dot').className='dot '+(data.media_online?'online':'unknown');
     $('fleet-count').textContent=data.summary.online+' / '+data.summary.registered+' live';
     $('hours-label').textContent='· '+data.summary.camera_hours_today.toFixed(1)+' camera-hours today';
@@ -203,17 +210,21 @@ async function refresh() {
     if(data.media_online)notice('');else notice('The backend is connected, but MediaMTX is unavailable. Check the streaming-server service.');
     renderGrid();
   }catch(error){
-    if(error.status===401){resetSession();notice('Your session expired. Connect and sign in again.');}
+    if(error.status===401){resetSession();notice('Your session expired. Please sign in again.');}
     else {state.connected=false;state.cameras=state.cameras.map(c=>({...c,status:'unknown'}));$('server-status').textContent='Central server unreachable';$('server-dot').className='dot unknown';$('fleet-count').textContent='— / 33 live';notice('Cannot reach the central server. '+error.message);renderGrid();}
   }finally{state.refreshing=false;}
 }
 $('login-form').addEventListener('submit',async e=>{
   e.preventDefault();$('login-error').textContent='';$('login-submit').disabled=true;
   try {
-    const u=new URL($('server-url').value);
+    const rawVal=($('server-url').value||state.base||(location.origin!=='null'?location.origin:'')).trim();
+    if(!rawVal)throw new Error('Enter a server URL.');
+    const targetUrl=/^https?:\/\//i.test(rawVal)?rawVal:(location.protocol==='https:'?'https://':'http://')+rawVal;
+    const u=new URL(targetUrl);
     if(!['http:','https:'].includes(u.protocol)||u.username||u.password||u.search||u.hash)throw new Error('Enter a server URL without credentials, query parameters or fragments.');
     if(location.protocol==='https:'&&u.protocol!=='https:')throw new Error('This hosted dashboard needs an HTTPS backend address. You can also open the server’s local dashboard directly.');
     const previous=state.base;state.base=u.href.replace(/\/+$/,'');
+    $('server-url').value=state.base;
     let data;try{data=await api('/api/auth/login',{method:'POST',body:{username:$('username').value,password:$('password').value}});}catch(error){state.base=previous;throw error;}
     for(const id of state.players.keys())stopPlayer(id);
     state.token=data.token;state.role=data.role;localStorage.setItem('bodycam_api',state.base);sessionStorage.setItem('bodycam_token',state.token);sessionStorage.setItem('bodycam_role',state.role);

@@ -46,6 +46,7 @@ def configured_secret(name):
 class Settings:
     data_dir: Path = field(default_factory=lambda: Path(os.getenv("DATA_DIR", "/data")))
     admin_password: str = field(default_factory=lambda: configured_secret("ADMIN_PASSWORD"))
+    operator_password: str = field(default_factory=lambda: configured_secret("OPERATOR_PASSWORD"))
     viewer_password: str = field(default_factory=lambda: configured_secret("VIEWER_PASSWORD"))
     internal_key: str = field(default_factory=lambda: configured_secret("INTERNAL_KEY"))
     publish_host: str = field(default_factory=lambda: os.getenv("PUBLISH_HOST", "localhost"))
@@ -136,7 +137,9 @@ class Store:
                     ended REAL, last_seen REAL NOT NULL);
             """)
             for user, role, password in (
-                ("admin", "admin", settings.admin_password), ("viewer", "viewer", settings.viewer_password)):
+                ("admin", "admin", settings.admin_password),
+                ("operator", "operator", settings.operator_password),
+                ("viewer", "viewer", settings.viewer_password)):
                 if password:
                     row = con.execute("SELECT password FROM users WHERE name=?", (user,)).fetchone()
                     if row is None:
