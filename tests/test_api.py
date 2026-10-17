@@ -181,3 +181,15 @@ def test_login_page_route(server):
     assert res.status_code == 200
     assert 'Officer / Operator Sign In' in res.text
 
+
+def test_dashboard_recorded_videos_section(server):
+    client, app = server
+    res = client.get('/')
+    assert res.status_code == 200
+    assert 'view-tab-recordings' in res.text
+    assert 'Recorded Videos' in res.text
+    assert 'id="section-recordings"' in res.text
+    assert 'id="recording-list"' in res.text
+    assert 'id="playback-dialog"' in res.text
+
+

@@ -27,6 +27,21 @@
   </div>
 </header>
 <nav class="toolbar" aria-label="Stream controls">
+  <div class="views-bar" id="views-bar">
+    <button class="pill view-tab active" id="view-tab-live" data-view="live">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+      </svg>
+      <span>Live Streams</span>
+    </button>
+    <button class="pill view-tab pill-recordings" id="view-tab-recordings" data-view="recordings">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <span>Recorded Videos</span>
+    </button>
+  </div>
   <div class="filters" id="filters">
     <button class="pill active" data-filter="all">All Streams</button>
     <button class="pill" data-filter="active">Active Feeds</button>
@@ -36,14 +51,47 @@
   </div>
 </nav>
 <main>
-  <section class="statusbar" aria-label="Fleet status">
-    <div class="status-left"><span class="dot unknown" id="server-dot"></span><span id="server-status">Server not connected</span><span class="separator"></span><strong id="fleet-count">33 cameras</strong><span id="hours-label"></span></div>
-    <div class="status-actions"><label class="search"><span class="sr-only">Search cameras</span><input id="search" type="search" placeholder="Search camera, officer or station…" autocomplete="off"></label></div>
+  <div id="section-live">
+    <section class="statusbar" aria-label="Fleet status">
+      <div class="status-left"><span class="dot unknown" id="server-dot"></span><span id="server-status">Server not connected</span><span class="separator"></span><strong id="fleet-count">33 cameras</strong><span id="hours-label"></span></div>
+      <div class="status-actions"><label class="search"><span class="sr-only">Search cameras</span><input id="search" type="search" placeholder="Search camera, officer or station…" autocomplete="off"></label></div>
+    </section>
+    <div id="notice" class="notice" role="status" hidden></div>
+    <section id="camera-grid" class="grid" aria-label="Body camera feeds"></section>
+    <div class="empty-grid" id="empty-grid" hidden>No cameras match this filter.</div>
+    <footer><span id="last-update">Connect the central server to receive live camera status.</span><span>Each camera uses its own SIM uplink.</span></footer>
+  </div>
+  <section id="section-recordings" class="recordings-section" hidden>
+    <div class="recordings-container">
+      <div class="recordings-header">
+        <div class="recordings-title-group">
+          <h2>Recorded Videos & Surveillance Archives</h2>
+          <p>Review high-definition video recordings and download officer patrol footage saved by the central server.</p>
+        </div>
+      </div>
+      <div class="recordings-toolbar">
+        <div class="recordings-toolbar-left">
+          <label class="search"><span class="sr-only">Search recordings</span><input id="recording-search" type="search" placeholder="Search recordings by camera, officer, group…" autocomplete="off"></label>
+          <select id="recording-camera" class="recording-camera-select"><option value="">All Cameras</option></select>
+        </div>
+        <div class="recordings-toolbar-right">
+          <span class="pill recording-count-pill" id="recording-summary">0 matching recordings</span>
+          <button type="button" class="pill refresh-btn" id="refresh-recordings">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            <span>Refresh</span>
+          </button>
+        </div>
+      </div>
+      <div id="recording-list" class="recordings-grid"></div>
+      <div class="pagination recordings-pagination">
+        <button class="secondary" id="recordings-prev">Previous</button>
+        <span id="recording-page"></span>
+        <button class="secondary" id="recordings-next">Next</button>
+      </div>
+    </div>
   </section>
-  <div id="notice" class="notice" role="status" hidden></div>
-  <section id="camera-grid" class="grid" aria-label="Body camera feeds"></section>
-  <div class="empty-grid" id="empty-grid" hidden>No cameras match this filter.</div>
-  <footer><span id="last-update">Connect the central server to receive live camera status.</span><span>Each camera uses its own SIM uplink.</span></footer>
 </main>
 <dialog id="setup-dialog" class="modal setup-modal">
   <div class="modal-heading"><div><h2>Camera setup</h2><p>Assign a camera and choose its SIM connection method.</p></div><button type="button" class="close" data-close aria-label="Close">×</button></div>
@@ -64,13 +112,26 @@
     </div>
   </div>
 </dialog>
-<dialog id="recordings-dialog" class="modal recordings-modal">
-  <div class="modal-heading"><div><h2>Video recordings</h2><p>Actual video files saved by the central server.</p></div><button type="button" class="close" data-close aria-label="Close">×</button></div>
-  <div class="recording-filters"><label><span class="sr-only">Filter recording camera</span><select id="recording-camera"><option value="">All cameras</option></select></label><label><span class="sr-only">Search recordings</span><input id="recording-search" type="search" placeholder="Search recordings…"></label><button class="secondary" id="refresh-recordings">Refresh</button></div>
-  <p class="help" id="recording-summary"></p><div id="recording-list"></div>
-  <div class="pagination"><button class="secondary" id="recordings-prev">Previous</button><span id="recording-page"></span><button class="secondary" id="recordings-next">Next</button></div>
+<dialog id="playback-dialog" class="modal playback-modal">
+  <div class="modal-heading">
+    <div>
+      <h2 id="playback-title">Recording</h2>
+      <p class="help" id="playback-help">Playback uses the original camera codec.</p>
+    </div>
+    <button type="button" class="close" data-close aria-label="Close">×</button>
+  </div>
+  <video id="recording-video" controls playsinline preload="metadata"></video>
+  <div class="playback-controls">
+    <div class="playback-speeds">
+      <span class="speed-label">Speed:</span>
+      <button type="button" class="speed-btn" data-speed="0.5">0.5x</button>
+      <button type="button" class="speed-btn active" data-speed="1">1.0x</button>
+      <button type="button" class="speed-btn" data-speed="1.5">1.5x</button>
+      <button type="button" class="speed-btn" data-speed="2">2.0x</button>
+    </div>
+    <button type="button" class="primary" id="playback-download-btn">Download Video</button>
+  </div>
 </dialog>
-<dialog id="playback-dialog" class="modal playback-modal"><div class="modal-heading"><h2 id="playback-title">Recording</h2><button type="button" class="close" data-close aria-label="Close">×</button></div><video id="recording-video" controls playsinline preload="metadata"></video><p class="help" id="playback-help">Playback uses the original camera codec.</p></dialog>
 <div class="toast" id="toast" role="status" hidden></div>
 </body>
 </html>
